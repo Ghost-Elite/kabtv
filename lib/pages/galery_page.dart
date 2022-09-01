@@ -24,6 +24,7 @@ class _GaleryPageState extends State<GaleryPage> {
   ApiGalery apiGalery;
   List galery=[];
   var logger =Logger();
+  bool isloading =false;
   Future<ApiGalery> fetchgalery() async {
 
      try {
@@ -38,7 +39,9 @@ class _GaleryPageState extends State<GaleryPage> {
            apiGalery = ApiGalery.fromJson(jsonDecode(response.body));
            //apiAlbum = apiAudio;
            galery =apiGalery.allitems;
+           isloading=false;
          });
+         isloading=false;
          logger.w('ghost-elite',galery[0].title);
 
 
@@ -67,7 +70,7 @@ class _GaleryPageState extends State<GaleryPage> {
         centerTitle: true,
         title: Text('Galerie photos',style: TextStyle(color: ColorPalette.appColor)),
       ),
-      body: Column(
+      body: apiGalery !=null? Column(
         children: [
           Container(
             width: SizeConfi.screenWidth,
@@ -92,7 +95,7 @@ class _GaleryPageState extends State<GaleryPage> {
               )
           )
         ],
-      ),
+      ) : Center(child: CircularProgressIndicator(color: ColorPalette.appColor,),),
     );
   }
   Widget gidViewVideo() {
@@ -115,6 +118,7 @@ class _GaleryPageState extends State<GaleryPage> {
                 photos: apiGalery.allitems[position].sdimage,
                 title: apiGalery.allitems[position].title,
                 galery: galery,
+                apiGalery: apiGalery,
               ),
               ),
 

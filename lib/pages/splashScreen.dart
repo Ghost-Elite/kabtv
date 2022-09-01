@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       var postListUrl =
-      Uri.parse("https://dev.acangroup.org/aar/kabtv/api.json");
+      Uri.parse("https://serveur01.ccngroupe.com/kabtv/api.json");
       final response = await http.get(postListUrl);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -67,6 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
           apiRequest = ApiRequest.fromJson(jsonDecode(response.body));
 
         });
+        logger.w('message',apiRequest.allitems[0].feedUrl);
 
       }
     } catch (error, stacktrace) {
@@ -182,6 +183,7 @@ class _SplashScreenState extends State<SplashScreen> {
           audioss: apiRequest.allitems[0].feedUrl,
           photo: apiRequest.allitems[2].feedUrl,
           actu: apiRequest.allitems[1].feedUrl,
+          apiRequest: apiRequest,
         ),
         ),
             (Route<dynamic> route) => false,

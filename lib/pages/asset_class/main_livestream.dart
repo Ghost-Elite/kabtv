@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 final streamUrl =
     'http://media.emit.com/pbs/tomorrow-land/202005081300/aac_mid.m4a';
+/*
+void main() => runApp(MyApp());*/
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
+/*class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,18 +17,18 @@ class MyApp extends StatelessWidget {
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
-}
+}*/
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key,  this.title}) : super(key: key);
+class LiveStream extends StatefulWidget {
+  LiveStream({Key key,  this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _LiveStreamState createState() => _LiveStreamState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _LiveStreamState extends State<LiveStream> {
   String downloadedFilePath;
   String downloadingProgress;
 
@@ -36,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text('widget.title'),
       ),
       body: Center(
         child: Column(

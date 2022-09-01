@@ -19,8 +19,8 @@ class Assets {
   static const String imagesCadre = 'assets/images/cadre.jpeg';
   static const String imagesCircleRounded = 'assets/images/circleRounded.png';
   static const String imagesFacebook = 'assets/images/facebook.png';
+  static const String imagesFrame 37 (4) = 'assets/images/ic_launcher.png';
   static const String imagesGalerie = 'assets/images/galerie.png';
-  static const String imagesIcLauncher = 'assets/images/ic_launcher.png';
   static const String imagesInstagram = 'assets/images/instagram.png';
   static const String imagesKab = 'assets/images/kab.gif';
   static const String imagesLayer = 'assets/images/layer.png';

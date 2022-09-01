@@ -47,7 +47,7 @@ class _MenuAlbumState extends State<MenuAlbum> {
 
           logger.w('bara',item['feed_url']);
         }*/
-        logger.w(apiAudio.allitems[0].feedUrl);
+        logger.w(apiAudio);
 
         // print('ghost ${apiAlbum.allitems}');
         /*fetchAudio(apiAudio.allitems[1].feedUrl);*/
@@ -77,7 +77,8 @@ class _MenuAlbumState extends State<MenuAlbum> {
         centerTitle: true,
         title: Text('Nos Albums',style: TextStyle(color: ColorPalette.appColor)),
       ),
-      body: CustomScrollView(
+      body: apiAudio !=null?
+      CustomScrollView(
         slivers: [
           /*SliverToBoxAdapter(
             child: Container(
@@ -121,6 +122,7 @@ class _MenuAlbumState extends State<MenuAlbum> {
                 return Container(
                   child: GestureDetector(
                       onTap: (){
+                        logger.w('message', apiAudio.allitems[index].feedUrl);
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => /*AssetAudio(
@@ -347,7 +349,8 @@ class _MenuAlbumState extends State<MenuAlbum> {
             ),
           ),
         ],
-      ),
+      ) :
+      Center(child: CircularProgressIndicator(color: ColorPalette.appColor,),),
     );
   }
 }

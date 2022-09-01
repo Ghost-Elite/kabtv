@@ -293,6 +293,10 @@ class _MyAppState extends State<MyApp> {
                         _assetsAudioPlayer.open(
                           Playlist(audios: myAudios),
                           showNotification: true,
+                            headPhoneStrategy:
+                            HeadPhoneStrategy.pauseOnUnplugPlayOnPlug,
+                            audioFocusStrategy: AudioFocusStrategy.request(
+                                resumeAfterInterruption: true)
                         );
                       },
                       onSelected: (myAudio) {
@@ -301,6 +305,11 @@ class _MyAppState extends State<MyApp> {
                           autoStart: true,
                           respectSilentMode: true,
                           showNotification: true,
+                          playInBackground: PlayInBackground.enabled,
+                          audioFocusStrategy: AudioFocusStrategy.request(
+                              resumeAfterInterruption: true,
+                              resumeOthersPlayersAfterDone: true),
+                          headPhoneStrategy: HeadPhoneStrategy.pauseOnUnplug,
                         );
                       },
                       playing: playing,

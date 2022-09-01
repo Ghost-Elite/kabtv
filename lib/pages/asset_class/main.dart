@@ -61,10 +61,12 @@ class _AssetAudioState extends State<AssetAudio> {
    var text;
    bool loading=false;
    List<RequestAudio> request=[];
+   RequestAudio requestAudio;
    ProgressDialog pr;
    ReceivePort _port = ReceivePort();
    var logger =Logger();
    var audios = <Audio>[];
+   var urlAudio;
    /*Future<ApiAudio> fetchConnexion() async {
 
      try {
@@ -123,6 +125,20 @@ class _AssetAudioState extends State<AssetAudio> {
 
 
    }*/
+   final audioss= <Audio>[
+     Audio.network(
+       'https://serveur01.ccngroupe.com/01_Ini_AkholouS_Moustapha_diop_Kurel_Ahlou_Badar_pre_Magal_2021.mp3',
+       metas: Metas(
+         id: 'Online',
+         title: 'Online',
+         artist: 'Florent Champigny',
+         album: 'OnlineAlbum',
+         // image: MetasImage.network('https://www.google.com')
+         image: MetasImage.network(
+             'https://image.shutterstock.com/image-vector/pop-music-text-art-colorful-600w-515538502.jpg'),
+       ),
+     ),
+   ];
 
    Future<RequestAudio> fetchAudio() async {
      var sings = <Audio>[];
@@ -144,7 +160,8 @@ class _AssetAudioState extends State<AssetAudio> {
            titre =mp3[0]['title'];
          });
 
-         loading;
+         loading=true;
+         logger.w('gh',widget.audioss);
          for(var item in mp3){
            sings.add(
                Audio.network(
@@ -172,6 +189,111 @@ class _AssetAudioState extends State<AssetAudio> {
        return RequestAudio.withError("Data not found / Connection issue");
      }
 
+
+   }
+   Future<void> fetchActualite() async {
+     var sings = <Audio>[];
+     var postListUrl =
+     Uri.parse(widget.audioss);
+     final response = await http.get(postListUrl);
+     // print(await http.get(postListUrl));
+     logger.w('status reponse',response.statusCode);
+     if (response.statusCode == 200) {
+       final data = jsonDecode(response.body);
+       //logger.w(listChannelsbygroup);
+       requestAudio = RequestAudio.fromJson(data);
+
+       // logger.i("actu url", apiService?.newsrss[0].title);
+       setState(() {
+         urlAudio = requestAudio.allitems;
+
+       });
+
+       for(var item in urlAudio){
+         logger.w('message',item.streamUrl);
+         sings.add(
+             Audio.network(
+                 item.streamUrl,
+                 metas: Metas(
+                     title: item.title,
+                     image: MetasImage.network(
+                         item.sdimage
+                     ),
+                     artist: item.desc
+                 )
+             ));
+         logger.w('bara',item.streamUrl);
+       }
+       setState((){
+         audios=sings;
+         //logger.w('ghost 2',audios);
+       });
+       logger.w('bara mp3',sings);
+       openPlayer(sings);
+
+
+       // model= AlauneModel.fromJson(jsonDecode(response.body));
+     } else {
+       throw Exception();
+     }
+   }
+   Future<void> getall() async {
+     var sings = <Audio>[];
+     var url;
+     bool loadRemoteDatatSucceed = false;
+     try {
+       var response = await http
+           .get(Uri.parse('https://acangroup.org/aar/kabtv/laylatoul_qadr2022.json'))
+           .timeout(const Duration(seconds: 10), onTimeout: () {
+
+         throw TimeoutException("connection time out try agian");
+       });
+
+       if (response.statusCode == 200) {
+         final data = jsonDecode(response.body);
+         //logger.w(listChannelsbygroup);
+          urlAudio=data['allitems'];
+         setState(() {
+
+         });
+         //logger.w('message',urlAudio[1]['stream_url']);
+         /*for(var item in urlAudio){
+           logger.w('message',item['stream_url']);
+           sings.add(
+               Audio.network(
+                   item.streamUrl,
+                   metas: Metas(
+                       title: item.title,
+                       image: MetasImage.network(
+                           item.sdimage
+                       ),
+                       artist: item.desc
+                   )
+               ));
+           logger.w('bara',item.streamUrl);
+         }*/
+         sings.add(
+             Audio.network(
+               urlAudio[1]['stream_url'],
+
+             ));
+         setState((){
+           audios=sings;
+           //logger.w('ghost 2',audios);
+         });
+         logger.w('bara mp3',sings);
+         openPlayer(sings);
+
+         loadRemoteDatatSucceed = true;
+         logger.i('message',urlAudio);
+
+       } else {
+
+         return null;
+       }
+
+     } on TimeoutException catch (_) {
+     }
 
    }
 
@@ -218,13 +340,14 @@ class _AssetAudioState extends State<AssetAudio> {
     //}));
     //openPlayer();
     _subscriptions.add(_assetsAudioPlayer.playlistAudioFinished.listen((data) {
-      print('playlistAudioFinished : $data');
+      logger.w('playlistAudioFinished : $data');
     }));
     _subscriptions.add(_assetsAudioPlayer.audioSessionId.listen((sessionId) {
-      print('audioSessionId : $sessionId');
+      logger.w('audioSessionId : $sessionId');
     }));
     fetchAudio();
-
+    //fetchActualite();
+    //getall();
 
 
   }
@@ -264,218 +387,223 @@ class _AssetAudioState extends State<AssetAudio> {
         centerTitle: true,
         title: Text(widget.title,style: TextStyle(color: ColorPalette.appColor)),
       ),
-      body: Container(
-        width: SizeConfi.screenWidth,
-        height: SizeConfi.screenHeight,
-        color: ColorPalette.appback,
-        child: Column(
-          children: [
-            Container(
-              width: SizeConfi.screenWidth,
-              height: 20,
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage('assets/images/layer.png'),
-                      fit: BoxFit.cover
-                  )
+      body: loading ?
+        Container(
+          width: SizeConfi.screenWidth,
+          height: SizeConfi.screenHeight,
+          color: ColorPalette.appback,
+          child: Column(
+            children: [
+              Container(
+                width: SizeConfi.screenWidth,
+                height: 20,
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                        image: AssetImage('assets/images/layer.png'),
+                        fit: BoxFit.cover
+                    )
+                ),
               ),
-            ),
-            Container(
-              width: SizeConfi.screenWidth,
-              height: 150,
-              decoration: BoxDecoration(
-                  color: ColorPalette.appSecondary,
-                  borderRadius: BorderRadius.only(bottomRight: Radius.circular(16,),bottomLeft: Radius.circular(16))
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _assetsAudioPlayer.builderLoopMode(
-                        builder: (context, loopMode) {
-                          return PlayerBuilder.isPlaying(
-                              player: _assetsAudioPlayer,
-                              builder: (context, isPlaying) {
-                                return PlayingControls(
-                                  loopMode: loopMode,
-                                  isPlaying: isPlaying,
-                                  isPlaylist: true,
-                                  onStop: () {
-                                    _assetsAudioPlayer.stop();
-                                  },
-                                  toggleLoop: () {
-                                    _assetsAudioPlayer.toggleLoop();
-                                  },
-                                  onPlay: () {
-                                    _assetsAudioPlayer.playOrPause();
-                                  },
-                                  onNext: () {
-                                    //_assetsAudioPlayer.forward(Duration(seconds: 10));
-                                    _assetsAudioPlayer.next(
-                                        keepLoopMode: true ,/*keepLoopMode: false*/);
-                                  },
-                                  onPrevious: () {
-                                    _assetsAudioPlayer.previous(
-                                      /*keepLoopMode: false*/);
+              Container(
+                width: SizeConfi.screenWidth,
+                height: 150,
+                decoration: BoxDecoration(
+                    color: ColorPalette.appSecondary,
+                    borderRadius: BorderRadius.only(bottomRight: Radius.circular(16,),bottomLeft: Radius.circular(16))
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _assetsAudioPlayer.builderLoopMode(
+                          builder: (context, loopMode) {
+                            return PlayerBuilder.isPlaying(
+                                player: _assetsAudioPlayer,
+                                builder: (context, isPlaying) {
+                                  return PlayingControls(
+                                    loopMode: loopMode,
+                                    isPlaying: isPlaying,
+                                    isPlaylist: true,
+                                    onStop: () {
+                                      _assetsAudioPlayer.stop();
+                                    },
+                                    toggleLoop: () {
+                                      _assetsAudioPlayer.toggleLoop();
+                                    },
+                                    onPlay: () {
+                                      _assetsAudioPlayer.playOrPause();
+                                    },
+                                    onNext: () {
+                                      //_assetsAudioPlayer.forward(Duration(seconds: 10));
+                                      _assetsAudioPlayer.next(
+                                          keepLoopMode: true ,/*keepLoopMode: false*/);
+                                    },
+                                    onPrevious: () {
+                                      _assetsAudioPlayer.previous(
+                                        /*keepLoopMode: false*/);
 
-                                  },
-                                );
-                              });
-                        },
-                      ),
+                                    },
+                                  );
+                                });
+                          },
+                        ),
 
-                    ],
-                  ),
-                  _assetsAudioPlayer.builderRealtimePlayingInfos(
-                      builder: (context, RealtimePlayingInfos infos) {
-                        if (infos == null) {
-                          return SizedBox();
-                        }
-                        //print('infos: $infos');
-                        return PositionSeekWidget(
-                          currentPosition: infos.currentPosition,
-                          duration: infos.duration,
-                          seekTo: (to) {
-                            _assetsAudioPlayer.seek(to);
-                          },
-                        );
-                      }),
-                ],
+                      ],
+                    ),
+                    _assetsAudioPlayer.builderRealtimePlayingInfos(
+                        builder: (context, RealtimePlayingInfos infos) {
+                          if (infos == null) {
+                            return SizedBox();
+                          }
+                          //print('infos: $infos');
+                          return PositionSeekWidget(
+                            currentPosition: infos.currentPosition,
+                            duration: infos.duration,
+                            seekTo: (to) {
+                              _assetsAudioPlayer.seek(to);
+                            },
+                          );
+                        }),
+                  ],
+                ),
               ),
-            ),
-            /*Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                          (BuildContext context, int index) {
-                        return GestureDetector(
-                          onTap: (){
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 10,bottom: 3,left: 10,right: 10),
-                            child: Container(
-                              width: SizeConfi.screenWidth,
-                              height: 85,
-                              decoration:  BoxDecoration(
-                                color: ColorPalette.appWhite,
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey[300]
-                                        .withOpacity(0.5),
-                                    spreadRadius: 2,
-                                    blurRadius: 3,
-                                    offset: Offset(0,
-                                        3), // changes position of shadow
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(7.0),
-                                    child: Container(
-                                      width: 60,
-                                      height: 70,
-                                      decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                              image: AssetImage('assets/images/circleRounded.png')
-                                          )
+              /*Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                            (BuildContext context, int index) {
+                          return GestureDetector(
+                            onTap: (){
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 10,bottom: 3,left: 10,right: 10),
+                              child: Container(
+                                width: SizeConfi.screenWidth,
+                                height: 85,
+                                decoration:  BoxDecoration(
+                                  color: ColorPalette.appWhite,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey[300]
+                                          .withOpacity(0.5),
+                                      spreadRadius: 2,
+                                      blurRadius: 3,
+                                      offset: Offset(0,
+                                          3), // changes position of shadow
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(7.0),
+                                      child: Container(
+                                        width: 60,
+                                        height: 70,
+                                        decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                                image: AssetImage('assets/images/circleRounded.png')
+                                            )
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Column(
-                                    children: [
-                                      Container(
-                                        child: Text('karamna Kourel Ahlou Badar',),
-                                      ),
-                                      Container(
-                                        child: Text('Dundal Koor Mosquée Massalikoul\n Djinane 2022',style: TextStyle(fontSize: 9),),
-                                      ),
-                                      Container(
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.sim_card_download),
-                                            Icon(Icons.sim_card_download),
-                                          ],
+                                    Column(
+                                      children: [
+                                        Container(
+                                          child: Text('karamna Kourel Ahlou Badar',),
                                         ),
-                                      )
-                                    ],
-                                  ),
-                                  Container()
+                                        Container(
+                                          child: Text('Dundal Koor Mosquée Massalikoul\n Djinane 2022',style: TextStyle(fontSize: 9),),
+                                        ),
+                                        Container(
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.sim_card_download),
+                                              Icon(Icons.sim_card_download),
+                                            ],
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    Container()
 
 
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                      childCount: 10, // 1000 list items
+                          );
+                        },
+                        childCount: 10, // 1000 list items
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            )*/
-            _assetsAudioPlayer.builderCurrent(
-                builder: (BuildContext context, Playing playing) {
-                  var logger =Logger();
-                  logger.w('message',titre);
-                  return SongsSelector(
-                    audios: audios,
-                    path: mp3,
-                    title: text,
-
-                    onPlaylistSelected: (myAudios) {
-                      _assetsAudioPlayer.open(
-                        Playlist(audios: myAudios),
-                        showNotification: true,
-                        headPhoneStrategy:
-                        HeadPhoneStrategy.pauseOnUnplugPlayOnPlug,
-                        audioFocusStrategy: AudioFocusStrategy.request(
-                            resumeAfterInterruption: true),
-                      );
-
-                    },
-                    onSelected: (myAudio) async {
-                      try {
-                        await _assetsAudioPlayer.open(
-                          myAudio,
-                          autoStart: true,
+                  ],
+                ),
+              )*/
+              loading? _assetsAudioPlayer.builderCurrent(
+                  builder: (BuildContext context, Playing playing) {
+                    var logger =Logger();
+                    logger.w('message',titre);
+                    return SongsSelector(
+                      audios: audios,
+                      path: mp3,
+                      title: text,
+                      assetsAudioPlayer: _assetsAudioPlayer,
+                      onPlaylistSelected: (myAudios) {
+                        _assetsAudioPlayer.open(
+                          Playlist(audios: myAudios),
                           showNotification: true,
-                          playInBackground: PlayInBackground.enabled,
+                          headPhoneStrategy:
+                          HeadPhoneStrategy.pauseOnUnplugPlayOnPlug,
                           audioFocusStrategy: AudioFocusStrategy.request(
-                              resumeAfterInterruption: true,
-                              resumeOthersPlayersAfterDone: true),
-                          headPhoneStrategy: HeadPhoneStrategy.pauseOnUnplug,
-                          notificationSettings: NotificationSettings(
-                            seekBarEnabled: false,
-                            stopEnabled: true,
-                            customStopAction: (player){
-                             player.stop();
-                            }
-                           // prevEnabled: false,
-                           /* customNextAction: (player) {
-                             print('next');
-                            }
-                            customStopIcon: AndroidResDrawable(name: 'ic_stop_custom'),
-                            customPauseIcon: AndroidResDrawable(name:'ic_pause_custom'),
-                            customPlayIcon: AndroidResDrawable(name:'ic_play_custom'),*/
-                          ),
+                              resumeAfterInterruption: true),
                         );
-                      } catch (e) {
-                        print(e);
-                      }
-                    },
-                    playing: playing,
-                  );
-                }),
 
-          ],
-        ),
-      ),
+                      },
+                      onSelected: (myAudio) async {
+                        try {
+                          await _assetsAudioPlayer.open(
+                            myAudio,
+                            autoStart: true,
+                            showNotification: true,
+                            playInBackground: PlayInBackground.enabled,
+                            audioFocusStrategy: AudioFocusStrategy.request(
+                                resumeAfterInterruption: true,
+                                resumeOthersPlayersAfterDone: true),
+                            headPhoneStrategy: HeadPhoneStrategy.pauseOnUnplug,
+                            notificationSettings: NotificationSettings(
+                              seekBarEnabled: false,
+                              stopEnabled: true,
+                              customStopAction: (player){
+                               player.stop();
+                              }
+                             // prevEnabled: false,
+                             /* customNextAction: (player) {
+                               print('next');
+                              }
+                              customStopIcon: AndroidResDrawable(name: 'ic_stop_custom'),
+                              customPauseIcon: AndroidResDrawable(name:'ic_pause_custom'),
+                              customPlayIcon: AndroidResDrawable(name:'ic_play_custom'),*/
+                            ),
+                          );
+                        } catch (e) {
+                          print(e);
+                        }
+                      },
+                      playing: playing,
+                    );
+                  }):Padding(
+                    padding: const EdgeInsets.only(top: 180),
+                    child: Center(child: CircularProgressIndicator(color: ColorPalette.appSecondary,),),
+                  ),
+
+            ],
+          ),
+        ) :
+        Center(child: CircularProgressIndicator(color: ColorPalette.appColor,),),
     );
 
       MaterialApp(

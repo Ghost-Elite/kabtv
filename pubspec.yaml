@@ -59,6 +59,7 @@ dependencies:
   marquee: ^2.2.3
   url_launcher:
   share_plus: ^4.0.10+1
+  flutter_riverpod: ^1.0.3
   youtube_api:
     path: youtube_api-0.8.0/
   youtube_api_v3:
@@ -74,6 +75,7 @@ flutter_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/images/ic_launcher.png"
+  # flutter pub run flutter_launcher_icons:main
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

@@ -9,6 +9,7 @@ import 'package:kabtv/utils/constant.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_api/youtube_api.dart';
 import 'dart:io';
+import '../network/api.dart';
 import 'actu.dart';
 import 'actualite.dart';
 import 'asset_class/main.dart';
@@ -23,7 +24,8 @@ class HomePage extends StatefulWidget {
   List<YT_API> ytResult = [];
   List<YT_APIPlaylist> ytResultPlaylist = [];
   var audioss,photo,actu;
-   HomePage({Key key,this.photo,this.audioss,this.ytResult,this.ytResultPlaylist,this.ytApiPlaylist,this.ytApi,this.actu}) : super(key: key);
+  ApiRequest apiRequest;
+   HomePage({Key key,this.apiRequest,this.photo,this.audioss,this.ytResult,this.ytResultPlaylist,this.ytApiPlaylist,this.ytApi,this.actu}) : super(key: key);
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -36,6 +38,7 @@ class _HomePageState extends State<HomePage> {
       key: scaffold,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.all(10.0),
           child: GestureDetector(
@@ -53,7 +56,8 @@ class _HomePageState extends State<HomePage> {
         ),
         title: Text('Dalal ak Jam',style: TextStyle(color: ColorPalette.appColor),),
       ),
-      body: Container(
+      body: widget.apiRequest != null ?
+        Container(
         width: SizeConfi.screenWidth,
         height: SizeConfi.screenHeight,
         color: ColorPalette.appback,
@@ -73,7 +77,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.only(top: 10,left: 20),
               child: Row(
                 children: [
-                  Text('Suivez-nous '),
+                  Text('Suivez-nous ',style: GoogleFonts.inter(fontSize: 14,fontWeight: FontWeight.bold)),
                   IconButton(onPressed: (){}, icon: Icon(Icons.arrow_forward,color: ColorPalette.appColor,))
                 ],
               ),
@@ -401,7 +405,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.only(top: 10,left: 30),
               child: Row(
                 children: [
-                  Text('Dernières vidéos '),
+                  Text('Dernières vidéos ',style: GoogleFonts.inter(fontSize: 14,fontWeight: FontWeight.bold),),
                   IconButton(onPressed: (){}, icon: Icon(Icons.arrow_forward,color: ColorPalette.appColor,))
                 ],
               ),
@@ -485,7 +489,8 @@ class _HomePageState extends State<HomePage> {
 
           ],
         ),
-      ),
+      ):
+        Center(child: CircularProgressIndicator(color: ColorPalette.appColor,),),
       drawer: DrawerPage(
         actu: widget.actu,
         photo: widget.photo,

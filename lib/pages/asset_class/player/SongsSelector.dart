@@ -2,7 +2,6 @@ import 'dart:isolate';
 
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:kabtv/utils/constant.dart';
@@ -10,21 +9,23 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:progress_dialog/progress_dialog.dart';
-import 'package:path_provider/path_provider.dart' as p;
+
 import 'dart:io';
 import 'dart:ui';
+
+import 'package:share_plus/share_plus.dart';
 class SongsSelector extends StatefulWidget {
   final Playing playing;
   final List<Audio> audios;
   final Function(Audio) onSelected;
   final Function(List<Audio>) onPlaylistSelected;
   var path,title;
-
+  AssetsAudioPlayer assetsAudioPlayer;
   SongsSelector(
       { this.playing,
        this.audios,
        this.onSelected,
-       this.onPlaylistSelected,this.path,this.title});
+       this.onPlaylistSelected,this.path,this.title,this.assetsAudioPlayer});
 
   @override
   State<SongsSelector> createState() => _SongsSelectorState();
@@ -65,42 +66,12 @@ class _SongsSelectorState extends State<SongsSelector> {
   Dio dio;
   String localpath;
 
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    // For your reference print the AppDoc directory
-    return directory.path;
-  }
 
-  Future<File> get _localFile async {
-    final path = await _localPath;
-    return File('$path/data.txt');
-  }
 
-  Future telecharger(String url) async{
-    var status = await Permission.storage.request();
-    print("entree telechargement");
-    print(status.isGranted);
-    if (status.isGranted) {
-      print("boucle telechargement");
-      print(url);
-      final baseStorage=await p.getExternalStorageDirectory();
-      final taskkId = await FlutterDownloader.enqueue(
-        url: url,
-        savedDir: baseStorage.path,
-        showNotification: true, // show download progress in status bar (for Android)
-        openFileFromNotification: true, // click on notification to open downloaded file (for Android)
-      );
-    }
-  }
-  ReceivePort _receivePort = ReceivePort();
 
-  static downloadingCallback(id, status, progress) {
-    ///Looking up for a send port
-    SendPort sendPort = IsolateNameServer.lookupPortByName("downloading");
 
-    ///ssending the data
-    sendPort.send([id, status, progress]);
-  }
+
+
 
 
   @override
@@ -121,20 +92,9 @@ class _SongsSelectorState extends State<SongsSelector> {
       setState((){ });
     });
     FlutterDownloader.registerCallback(downloadCallback);*/
-    IsolateNameServer.registerPortWithName(_receivePort.sendPort, "downloading");
 
 
-    ///Listening for the data is comming other isolataes
-    _receivePort.listen((message) {
-      setState(() {
-        progress = message[2];
-      });
 
-      print(progress);
-    });
-
-
-    FlutterDownloader.registerCallback(downloadingCallback);
 
   }
   @override
@@ -143,92 +103,9 @@ class _SongsSelectorState extends State<SongsSelector> {
     print('dispose');
     super.dispose();
   }
-  static void downloadCallback(String id, DownloadTaskStatus status, int progress) {
-    final SendPort send = IsolateNameServer.lookupPortByName('downloader_send_port');
-    send.send([id, status, progress]);
-  }
-  Future openFile(String url)async{
-    final name= url.split("/").last;
-    final file=await downloadfiles(url,name);
 
-    //if(file==null) return;
-    //print("path: ${file.path}");
-    //OpenFile.open(file.path);
-  }
-  Future<String> readcontent() async {
-    try {
-      //final file = await _localFile;
 
-      final directory = await getApplicationDocumentsDirectory();
-      //final file=File('${directory.path}');
-      //final raf=file.openSync(mode: FileMode.write);
-      print("mp3");
-      print(directory.path);
-      //print(file);
-      // Read the file
-      //String contents = await file.readAsString();
-      //return contents;
-      return "";
-    } catch (e) {
-      // If there is an error reading, return a default String
-      return 'Error';
-    }
-  }
-  Future<File> pickFile() async{
-    final result=await FilePicker.platform.pickFiles();
-    if(result==null) return null;
-    return File(result.files.first.path);
-  }
-  Future<File> downloadfiles(String url,String name) async{
-    final appstorage=await p.getApplicationDocumentsDirectory();
-    String folderName="Kab";
-    final dirPath = '${appstorage.path}/Kab' ;
-    final Directory _appDocDirFolder =  Directory('${appstorage.path}/$folderName/');
-    if(await _appDocDirFolder.exists()){
-      print("dossier existe");
-    }
-    else{
-      final Directory _appDocDirNewFolder=await _appDocDirFolder.create(recursive: true);
-      print("j'ai cree dossier");
-      print(_appDocDirNewFolder.path);
-    }
 
-    //pr = new ProgressDialog(context,ProgressDialogType.Download);
-    //pr.show();
-    try{
-      // pr.update(progress: progres,message: "${progres}");
-      //if(progres==100){
-      //  pr.hide();
-      //}
-      final response=await Dio().get(url,
-          options: Options(
-            responseType: ResponseType.bytes,
-            followRedirects: false,
-            receiveTimeout: 0,
-          ),
-          onReceiveProgress: (rec,total){
-            setState(() {
-              _isLoading=true;
-              progress=((rec/total)*100).toStringAsFixed(0);
-              progres=((rec/total)*100);
-              print(progres);
-
-            });
-          }
-      );
-      final file=File('${_appDocDirFolder.path}$name');
-      //pr.update(message: progress);
-      final raf=file.openSync(mode: FileMode.write);
-      //print(raf);
-      raf.writeFromSync(response.data);
-      print(raf.path);
-      await raf.close();
-      return file;
-    }catch(e){
-      return null;
-    }
-
-  }
 
 
 
@@ -244,7 +121,7 @@ class _SongsSelectorState extends State<SongsSelector> {
                     (BuildContext context, int index) {
                       final item = widget.audios[index];
                       final isPlaying = item.path == widget.playing?.audio.assetAudioPath;
-                  return GestureDetector(
+                  return  GestureDetector(
                       onTap: (){
                         //widget.onSelected(item);
                       },
@@ -337,12 +214,17 @@ class _SongsSelectorState extends State<SongsSelector> {
                                       Positioned(
                                         left: 132,
                                         top: 50,
-                                        child: Container(
-                                          width: 14,
-                                          height: 14,
-                                          child: IconButton(
-                                            onPressed: (){},
-                                            icon: Icon(Icons.share,size: 15,color: Color(0xff969792)),
+                                        child: GestureDetector(
+                                          onTap: ()=>openShared(),
+                                          child: Container(
+                                            width: 14,
+                                            height: 14,
+                                            child: IconButton(
+                                              onPressed: (){
+                                                openShared();
+                                              },
+                                              icon: Icon(Icons.share,size: 15,color: Color(0xff969792)),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -373,7 +255,9 @@ class _SongsSelectorState extends State<SongsSelector> {
                                           child: IconButton(
                                             onPressed: (){
                                               //widget.onSelected(item);
-                                              logger.w('message');
+                                              logger.w('message tt');
+                                              widget.assetsAudioPlayer
+                                                  .seekBy(Duration(seconds: 10));
                                             },
                                             icon: Icon(Icons.skip_next,color: isPlaying ? Colors.white : ColorPalette.appColor,),
                                           ),
@@ -491,5 +375,13 @@ class _SongsSelectorState extends State<SongsSelector> {
         ],
       ),
     );
+  }
+  void openShared(){
+    if(Platform.isAndroid){
+      Share.share(
+          "Télécharger l'application KAB TV sur play Store : https://play.google.com/store/apps/details?id=com.acangroup.kabtv");
+    }else{
+      Share.share("Télécharger l'application KAB TV sur ");
+    }
   }
 }

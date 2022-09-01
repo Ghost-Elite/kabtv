@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:kabtv/configs/size_config.dart';
 
+import '../network/api_galery.dart';
 import '../utils/constant.dart';
 
 class GaleryImages extends StatefulWidget {
   var photos,galery,title,image;
-  GaleryImages({Key key,this.galery,this.title,this.photos,this.image}) : super(key: key);
+
+  ApiGalery apiGalery;
+  GaleryImages({Key key,this.galery,this.title,this.photos,this.image,this.apiGalery}) : super(key: key);
 
   @override
   State<GaleryImages> createState() => _GaleryImagesState();
@@ -35,16 +38,27 @@ class _GaleryImagesState extends State<GaleryImages> {
       ),
       body: Column(
         children: [
+
           Padding(
             padding: const EdgeInsets.only(top: 5),
-            child: Container(
-              width: SizeConfi.screenWidth,
+            child: CachedNetworkImage(
               height: 200,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(imge),
-                  fit: BoxFit.fill
-                )
+              width: MediaQuery.of(context).size.width,
+              imageUrl: imge,
+              fit: BoxFit.fill,
+              placeholder: (context, url) => Image.asset(
+                "assets/images/cadre.jpeg",
+                fit: BoxFit.cover,
+                height: 200,
+                width:  SizeConfi.screenWidth,
+                //color: colorPrimary,
+              ),
+              errorWidget: (context, url, error) => Image.asset(
+                "assets/images/cadre.jpeg",
+                fit: BoxFit.cover,
+                height: 200,
+                  width: SizeConfi.screenWidth,
+                //color: colorPrimary,
               ),
             ),
           ),
